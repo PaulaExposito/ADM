@@ -4,7 +4,6 @@ from mpl_toolkits.basemap import Basemap, cm
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 
 # Common interface to all concrete representations 
@@ -64,7 +63,10 @@ class Scatter(Representation):
     def makeChart(self, xaxis = [], yaxis = [], metadata = {}) -> None:
         fig = plt.figure()
 
-        plt.scatter(xaxis, yaxis, cmap='viridis')
+        if 'colors' in metadata:
+            plt.scatter(xaxis, yaxis, c=metadata['colors'], cmap='viridis')
+        else:
+            plt.scatter(xaxis, yaxis, cmap='viridis')
 
         plt.title(metadata['title'])
         plt.xlabel(metadata['xlabel'])
@@ -74,16 +76,13 @@ class Scatter(Representation):
 
 class GeoScatter(Representation):
     def makeChart(self, xaxis = [], yaxis = [], metadata = {}) -> None:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 8))
 
-        fig = plt.figure(num=None, figsize=(12, 8) )
         m = Basemap(projection='merc', llcrnrlat=-80, urcrnrlat=80, llcrnrlon=-180, urcrnrlon=180,resolution='c')
         m.drawcoastlines()
-        
-        m.scatter(yaxis, xaxis, s = 2)
+        x, y = m(yaxis, xaxis)
+        m.scatter(x, y, 10)
 
-        plt.xlim(-180, 180)
-        plt.ylim(-90, 90)
         plt.title(metadata['title'])
         plt.savefig("output/" + metadata['output'] + "_geoscatter")
 
@@ -136,56 +135,59 @@ if __name__ == "__main__":
     df3 = df6 = pd.read_csv("data/GlobalLandTemperaturesByCity.csv")
     df4 = pd.read_csv("data/GlobalLandTemperaturesByMajorCity.csv")
 
-    # # Line chart
-
-    # df1 = df1[df1.dt.str.contains(r'-01-01')]       # Only January's results
-    # NUM_DATA = 20
-
-    # col_date = df1['dt'].tail(NUM_DATA).tolist()
-    # col_date = list(map(lambda each : each[0:4], col_date))
-
-    # col_landMaxTemperature = df1['LandMaxTemperature'].tail(NUM_DATA).tolist()
-    # col_landMinTemperature = df1['LandMinTemperature'].tail(NUM_DATA).tolist()
-    # col_landAverageTemperature = df1['LandAverageTemperature'].tail(NUM_DATA).tolist()
-
-    # columns = [col_landMaxTemperature, col_landAverageTemperature, col_landMinTemperature] 
-
-    # metadata1 = {
-    #     "xlabel": "Year",
-    #     "ylabel": [
-    #         "Max. Temp", 
-    #         "Ave. Temp",
-    #         "Min. Temp", 
-    #     ],
-    #     "title": "Global Temperatures at January",
-    #     "output": "plot",
-    # }
-
-    # context1 = Context(LineChart())
-    # context1._metadata = metadata1
-    # context1.makeChart(col_date, columns)
+    df_seeds = pd.read_csv("data/seeds_dataset.txt", sep=r'\s+', skip_blank_lines=True, skipinitialspace=True)
 
 
-    # # Bar chart
+    # Line chart
 
-    # df2 = df2.groupby(["Country", "State"])["State"].count().reset_index(name="nentries")
-    # df2 = df2.groupby("Country")["State"].count().reset_index(name="nstates")
+    df1 = df1[df1.dt.str.contains(r'-01-01')]       # Only January's results
+    NUM_DATA = 20
 
-    # col_countries = df2['Country'].tolist()
-    # col_nstates = [ df2['nstates'].tolist() ]
+    col_date = df1['dt'].tail(NUM_DATA).tolist()
+    col_date = list(map(lambda each : each[0:4], col_date))
 
-    # metadata2 = {
-    #     "xlabel": "Country",
-    #     "ylabel": [
-    #         "Number of states",
-    #     ],
-    #     "title": "Stations per country",
-    #     "output": "plot",
-    # }
+    col_landMaxTemperature = df1['LandMaxTemperature'].tail(NUM_DATA).tolist()
+    col_landMinTemperature = df1['LandMinTemperature'].tail(NUM_DATA).tolist()
+    col_landAverageTemperature = df1['LandAverageTemperature'].tail(NUM_DATA).tolist()
 
-    # context2 = Context(BarChart())
-    # context2._metadata = metadata2
-    # context2.makeChart(col_countries, col_nstates)
+    columns = [col_landMaxTemperature, col_landAverageTemperature, col_landMinTemperature] 
+
+    metadata1 = {
+        "xlabel": "Year",
+        "ylabel": [
+            "Max. Temp", 
+            "Ave. Temp",
+            "Min. Temp", 
+        ],
+        "title": "Global Temperatures at January",
+        "output": "plot",
+    }
+
+    context1 = Context(LineChart())
+    context1._metadata = metadata1
+    context1.makeChart(col_date, columns)
+
+
+    # Bar chart
+
+    df2 = df2.groupby(["Country", "State"])["State"].count().reset_index(name="nentries")
+    df2 = df2.groupby("Country")["State"].count().reset_index(name="nstates")
+
+    col_countries = df2['Country'].tolist()
+    col_nstates = [ df2['nstates'].tolist() ]
+
+    metadata2 = {
+        "xlabel": "Country",
+        "ylabel": [
+            "Number of states",
+        ],
+        "title": "Stations per country",
+        "output": "plot",
+    }
+
+    context2 = Context(BarChart())
+    context2._metadata = metadata2
+    context2.makeChart(col_countries, col_nstates)
 
 
     # Multiple bar chart
@@ -219,63 +221,84 @@ if __name__ == "__main__":
     context3._metadata = metadata3
     context3.makeChart(col_countries, [col_ncities, col_nmajorcities])
 
-    # # Histogram
+    # Histogram
 
-    # col_landAverageTemperature = df5['LandAverageTemperature'].tolist()
+    col_landAverageTemperature = df5['LandAverageTemperature'].tolist()
 
-    # metadata5 = {
-    #     "xlabel": "Temperature (in ºC)",
-    #     "ylabel": [
-    #         "Nº measurement", 
-    #     ],
-    #     "title": "Global Temperatures",
-    #     "output": "plot",
-    # }
+    metadata5 = {
+        "xlabel": "Temperature (in ºC)",
+        "ylabel": [
+            "Nº measurement", 
+        ],
+        "title": "Global Temperatures",
+        "output": "plot",
+    }
 
-    # context5 = Context(Histogram())
-    # context5._metadata = metadata5
-    # context5.makeChart(yaxis = col_landAverageTemperature)
-
-
-    # # Scatter on map
-
-    # col_latitude = df6['Latitude'].tolist()
-    # col_longitude = df6['Longitude'].tolist()
-
-    # for i in range(len(col_latitude)):
-    #     col_latitude[i] = float(col_latitude[i][:-1]) if (col_latitude[i][-1] == 'N') else -float(col_latitude[i][:-1])
-
-    # for i in range(len(col_longitude)):
-    #     col_longitude[i] = float(col_longitude[i][:-1]) if (col_longitude[i][-1] == 'W') else -float(col_longitude[i][:-1])
-
-    # metadata6 = {
-    #     "title": "Cities in the World",
-    #     "output": "plot",
-    # }
-
-    # context6 = Context(GeoScatter())
-    # context6._metadata = metadata6
-    # context6.makeChart(col_latitude, col_longitude)
+    context5 = Context(Histogram())
+    context5._metadata = metadata5
+    context5.makeChart(yaxis = col_landAverageTemperature)
 
 
-    # # Scatter
+    # Scatter on map
 
-    # df7 = df7.dropna()
-    # max_temperature = df7['LandMaxTemperature'].tolist()
-    # min_temperature = df7['LandMinTemperature'].tolist()
+    col_latitude = df6['Latitude'].tolist()
+    col_longitude = df6['Longitude'].tolist()
 
-    # metadata7 = {
-    #     "xlabel": "Max. Temp",
-    #     "ylabel": [
-    #         "Min. Temp",
-    #     ],
-    #     "title": "Global Maximun Temperatures Distribution ",
-    #     "output": "plot",
-    # }
+    for i in range(len(col_latitude)):
+        col_latitude[i] = float(col_latitude[i][:-1]) if (col_latitude[i][-1] == 'N') else -float(col_latitude[i][:-1])
 
-    # context7 = Context(Scatter())
-    # context7._metadata = metadata7
-    # context7.makeChart(max_temperature, min_temperature)
+    for i in range(len(col_longitude)):
+        col_longitude[i] = -float(col_longitude[i][:-1]) if (col_longitude[i][-1] == 'W') else float(col_longitude[i][:-1])
+
+    metadata6 = {
+        "title": "Cities in the World",
+        "output": "plot",
+    }
+
+    context6 = Context(GeoScatter())
+    context6._metadata = metadata6
+    context6.makeChart(col_latitude, col_longitude)
+
+
+    Scatter
+
+    df7 = df7.dropna()
+    max_temperature = df7['LandMaxTemperature'].tolist()
+    min_temperature = df7['LandMinTemperature'].tolist()
+
+    metadata7 = {
+        "xlabel": "Max. Temp",
+        "ylabel": [
+            "Min. Temp",
+        ],
+        "title": "Maximum Global Temperature Distribution",
+        "output": "plot",
+    }
+
+    context7 = Context(Scatter())
+    context7._metadata = metadata7
+    context7.makeChart(max_temperature, min_temperature)
+
+
+    # Scatter
+
+    col_length = df_seeds['length'].tolist()
+    col_width = df_seeds['width'].tolist()
+    col_type = df_seeds['type'].tolist()
+
+    metadata_seeds = {
+        "xlabel": "Kernel length",
+        "ylabel": [
+            "Kernel width",
+        ],
+        "title": "Seeds Distribution",
+        "output": "plot-seeds",
+        "colors": col_type
+    }
+
+    context_seeds = Context(Scatter())
+    context_seeds._metadata = metadata_seeds
+    context_seeds.makeChart(col_length, col_width)
 
 
     print("Exiting...")
