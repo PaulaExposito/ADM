@@ -260,7 +260,7 @@ if __name__ == "__main__":
     context6.makeChart(col_latitude, col_longitude)
 
 
-    Scatter
+    #Scatter
 
     df7 = df7.dropna()
     max_temperature = df7['LandMaxTemperature'].tolist()
