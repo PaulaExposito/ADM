@@ -4,13 +4,12 @@ import os
 
 # Data sources
 
-# df1 = df5 = df7 = pd.read_csv("data/archive/GlobalTemperatures.csv")
+df1 = df5 = df7 = pd.read_csv("data/archive/GlobalTemperatures.csv")
 # df2 = pd.read_csv("data/archive/GlobalLandTemperaturesByState.csv")
-df3 = df6 = pd.read_csv("data/archive/GlobalLandTemperaturesByCity.csv")
+# df3 = df6 = pd.read_csv("data/archive/GlobalLandTemperaturesByCity.csv")
 # df4 = pd.read_csv("data/archive/GlobalLandTemperaturesByMajorCity.csv")
 # df_violin = pd.read_csv("data/archive/GlobalLandTemperaturesByCountry.csv")
 
-# df_seeds = pd.read_csv("data/seeds_dataset.txt", sep=r'\s+', skip_blank_lines=True, skipinitialspace=True)
 
 
 os.makedirs('data/generated', exist_ok=True)
@@ -52,8 +51,30 @@ os.makedirs('data/generated', exist_ok=True)
 
 # ML Classification
 
-df6 = df6.dropna()
-df6 = df6.drop(columns=['dt', 'Country', 'Latitude', 'Longitude'])
-df6 = df6[['AverageTemperature', 'AverageTemperatureUncertainty', 'City']]
-df6.to_csv('data/generated/ml_classification.csv', index=False)
+# df6 = df6.dropna()
+# df6 = df6.drop(columns=['dt', 'Country', 'Latitude', 'Longitude'])
+# df6 = df6[['AverageTemperature', 'AverageTemperatureUncertainty', 'City']]
+# df6.to_csv('data/generated/ml_classification.csv', index = False)
 
+
+
+# ML Classification
+
+df_seeds = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
+df_seeds['type'] = df_seeds['type'].astype(str)
+df_seeds['type'] = df_seeds['type'].replace(['1', '2', '3'], ['Kama', 'Rosa', 'Canadian'])
+df_seeds.to_csv('data/generated/seeds_dataset.csv', index = False)
+
+
+# ML Regression
+
+df5 = df5.dropna()
+df5 = df5[['LandMaxTemperature', 'LandMinTemperature']]
+df5.to_csv('data/generated/ml_regression.csv', index = False)
+
+
+# ML Clustering
+
+df_seeds2 = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
+df_seeds2 = df_seeds2[['area', 'perimeter', 'type']]
+df_seeds2.to_csv('data/generated/ml_kmeans.csv', index = False)
