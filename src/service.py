@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score,classification_report,confusion_matrix
+from sklearn import tree
+import graphviz
+
 
 class Representation(ABC):
     """
@@ -97,7 +103,7 @@ class ViolinPlot(Representation):
         plt.savefig("output/" + metadata['output'] + "_violinplot")
 
 
-class Context():
+class ContextRepresentation():
     """
     Context is the interface users interact with
     """
@@ -130,6 +136,38 @@ class Context():
         self._representation.makeChart(xaxis, yaxis, self._metadata)
 
 
+
+
+
+class Learning(ABC):
+    @abstractmethod
+    def learn(self) -> None:
+        pass
+
+class Classification(Learning):
+    def learn(self) -> None:
+        print("Classification")
+
+
+
+
+
+class Regression(Learning):
+    def learn(self) -> None:
+        print("Regression")
+
+class Clustering(Learning):
+    def learn(self) -> None:
+        print("Clustering")
+
+class ContextML():
+    def __init__(self, mlAlgorithm: Learning) -> None:
+        self._mlAlgorithm = mlAlgorithm
+    def learn(self) -> None:
+        self._mlAlgorithm.learn()
+
+
+
 methods = {
     "LineChart": LineChart(),
     "BarChart": BarChart(),
@@ -139,18 +177,28 @@ methods = {
     "Violin": ViolinPlot(),
 }
 
+mlAlgorithms = {
+    "classification" : Classification(),
+    "regression" : Regression(),
+    "clustering" : Clustering(),
+}
+
+
 def help():
     return """
 Usage: python service.py [options]
 Options:
     -h,--help                     Help
-    -i,--input=<filename>        CSV dataset
+    -i,--input=<filename>         CSV dataset
     -o,--output=<output>          PNG file with the resulting chart
     -t,--title=<title>            Title of the chart
     -m,--method=<chartname>       Chart to be applied
     -c,--columns=<col1,...,colN>  List with the dataset columns to representate
     --xlabel=<label>              Label for X axis
     --ylabel=<label>              Label for Y axis
+    --ml=<classification|
+          regression|
+          clustering>             Machine learning algorithm
     """
 
 # Main
@@ -164,11 +212,14 @@ if __name__ == "__main__":
     columns = None
     xlabel = None
     ylabel = None
+    ml = None
+    className = None
 
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hi:o:t:m:c:", ["help", "input=", 
-                "output=", "title=", "method=", "columns=", "xlabel=", "ylabel="])
+                "output=", "title=", "method=", "columns=", "xlabel=", "ylabel=",
+                "ml=","className="])
     except getopt.GetoptError:
         print(help())
 
@@ -191,14 +242,75 @@ if __name__ == "__main__":
             xlabel = arg
         elif opt in ("--ylabel"):
             ylabel = arg.split(",")
+        elif opt in ("--ml"):
+            ml = arg
+        elif opt in ("--className"):
+            className = arg
+
+    
+    if (ml != None):
+        print(ml)
+        print(inDataset)
+
+        try: 
+            # Read file and create dataframe
+            df = pd.read_csv(inDataset)
+            print(df.head())
+
+            # Split the dataset in Train-Test
+            X = df.drop(className, axis=1)
+            y = df[[className]]
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+            
+            # Train
+            clf_model = DecisionTreeClassifier(criterion="gini", random_state=42, max_depth=3, min_samples_leaf=5)   
+            clf_model.fit(X_train,y_train)
+
+            # Validation
+            y_predict = clf_model.predict(X_test.head())
+            print(accuracy_score(y_test.head(), y_predict))
 
 
-    if (chart != None):
+            # Print tree
+
+            target = list(df[className].unique())
+            feature_names = list(X.columns)
+
+            # dot_data = tree.export_graphviz(clf_model,
+            #                                 out_file=None, 
+            #                                 feature_names=feature_names,  
+            #                                 class_names=target,  
+            #                                 filled=True, rounded=True,  
+            #                                 special_characters=True)  
+            # graph = graphviz.Source(dot_data)  
+
+            # graph.view()
+            # print(graph)
+
+            fig = plt.figure()
+
+            tree.plot_tree(clf_model)
+
+            fig.savefig("output/classification.png")
+
+
+            # Create context
+            mlContext = ContextML(mlAlgorithms.get(ml))
+
+
+
+            mlContext.learn()
+
+        except AttributeError:
+            print("Algoritmo de machine learning no válido: utilizar classification, regression o clustering")
+
+
+    if (chart != None and ml == None):
         # Read file and create dataframe
         df = pd.read_csv(inDataset)
 
         # Create context
-        context = Context(methods.get(chart))
+        context = ContextRepresentation(methods.get(chart))
         
         # Set metadata
         metadata = {
