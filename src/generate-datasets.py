@@ -57,24 +57,30 @@ os.makedirs('data/generated', exist_ok=True)
 # df6.to_csv('data/generated/ml_classification.csv', index = False)
 
 
+df_seeds = df_seeds_dt = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
+
 
 # ML Classification
 
-df_seeds = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
-df_seeds['type'] = df_seeds['type'].astype(str)
-df_seeds['type'] = df_seeds['type'].replace(['1', '2', '3'], ['Kama', 'Rosa', 'Canadian'])
-df_seeds.to_csv('data/generated/seeds_dataset.csv', index = False)
+df_seeds_dt['type'] = df_seeds_dt['type'].astype(str)
+df_seeds_dt['type'] = df_seeds_dt['type'].replace(['1', '2', '3'], ['Kama', 'Rosa', 'Canadian'])
+df_seeds_dt.to_csv('data/generated/seeds_dataset.csv', index = False)
 
 
-# ML Regression
+# ML Linear Regression
 
 df5 = df5.dropna()
 df5 = df5[['LandMaxTemperature', 'LandMinTemperature']]
 df5.to_csv('data/generated/ml_regression.csv', index = False)
 
 
+# ML Logistic Regression
+df_seeds_lr = df_seeds_kmeans = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
+df_seeds_kmeans = df_seeds_kmeans[['area', 'perimeter', 'type']]
+df_seeds_lr.to_csv('data/generated/ml_logisticRegression.csv', index = False)
+
+
 # ML Clustering
 
-df_seeds2 = pd.read_csv("data/seeds_dataset.txt", sep = r'\s+', skip_blank_lines = True, skipinitialspace = True)
-df_seeds2 = df_seeds2[['area', 'perimeter', 'type']]
-df_seeds2.to_csv('data/generated/ml_kmeans.csv', index = False)
+df_seeds_kmeans = df_seeds_kmeans[['area', 'perimeter', 'type']]
+df_seeds_kmeans.to_csv('data/generated/ml_kmeans.csv', index = False)

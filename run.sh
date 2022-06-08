@@ -36,7 +36,7 @@ python src/service.py \
 
 # Example for Decision Tree
 python src/service.py \
---ml=classification \
+--ml=DecisionTree \
 --input=data/generated/seeds_dataset.csv \
 --className=type \
 --output=seeds
@@ -44,15 +44,41 @@ python src/service.py \
 
 # Example for Linear Regression
 python src/service.py \
---ml=regression \
+--ml=LinearRegression \
 --input=data/generated/ml_regression.csv \
 --output=maxminTemps
 
 
 # Example for Clustering
 python src/service.py \
---ml=clustering \
+--ml=KMeans \
 --input=data/generated/ml_kmeans.csv \
 --nclusters=3 \
 --className=type \
 --output=seeds
+
+
+# Example for Pipeline
+python src/service.py \
+--ml=Pipeline \
+--input=data/generated/seeds_dataset.csv \
+--className=type
+
+
+# Example for Logistic Regression
+python src/service.py \
+--ml=LogisticRegression \
+--input=data/generated/ml_regression.csv \
+--output=maxminTemps
+
+
+# Example for KNeighbors
+python src/service.py \
+--ml=KNeighbors \
+--input=data/generated/ml_logisticRegression.csv \
+--output=maxminTemps \
+--className=type \
+--columns=perimeter,groove_length \
+--title="KNeighbors" \
+--xlabel="perimeter" \
+--ylabel="groove_length"

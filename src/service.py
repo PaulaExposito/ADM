@@ -16,6 +16,18 @@ from sklearn.metrics import accuracy_score,classification_report,confusion_matri
 from sklearn.cluster import KMeans
 from sklearn import tree
 from sklearn import metrics
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import Binarizer
+from sklearn.decomposition import PCA
+from sklearn import svm
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+
+
+# import warnings
+# warnings.filterwarnings('ignore')
 
 
 class Representation(ABC):
@@ -167,9 +179,9 @@ class Learning(ABC):
     def learn(self) -> None:
         pass
 
-class Classification(Learning):
+class DecisionTree_(Learning):
     def learn(self, data, metadata = {}) -> None:
-        print("Classification ")
+        print("DecisionTree ")
 
         # Split the dataset in Train-Test
         X = data.drop(metadata['className'], axis = 1)
@@ -182,8 +194,7 @@ class Classification(Learning):
 
         # Validation
         y_predict = clf_model.predict(X_test)
-        print(f"\nDecision Tree accuracity: {accuracy_score(y_test, y_predict)}")
-
+        print("\nDecision Tree accuracity: %.3f" % accuracy_score(y_test, y_predict))
 
         # Save the tree in an ouput image
 
@@ -198,9 +209,9 @@ class Classification(Learning):
 
 
 
-class Regression(Learning):
+class LinearRegression_(Learning):
     def learn(self, data, metadata = {}) -> None:
-        print("Regression")
+        print("LinearRegression")
 
         # Split the dataset in Train-Test
         X = data.iloc[:, :-1].values
@@ -211,7 +222,7 @@ class Regression(Learning):
         regressor = LinearRegression()   
         regressor.fit(X_train, y_train)
 
-        print('\nRegression model:\ny = ', regressor.coef_[0], "x + ", regressor.intercept_)
+        print('\nLinearRegression model:\ny = ', regressor.coef_[0], "x + ", regressor.intercept_)
 
         y_predict = regressor.predict(X_test)
 
@@ -221,14 +232,55 @@ class Regression(Learning):
 
         # Save model in an ouput image
 
-        ax = sns.regplot(x = X_train, y = y_train, ci = None, line_kws = {'color':'red'})
+        ax = sns.regplot(x = X_train[:,0], y = y_train, ci = None, line_kws = {'color':'red'})
         plt = ax.get_figure()
         plt.savefig("output/" + metadata['output'] + "_linearRegression")
 
         print('\nOutput: ', "output/" + metadata['output'] + "_linearRegression")
 
 
-class Clustering(Learning):
+class LogisticRegression_(Learning):
+    def learn(self, data, metadata = {}) -> None:
+        print("LogisticRegression")
+
+        # Split the dataset in Train-Test
+        X = data.drop(metadata['className'], axis = 1)
+        y = data[[metadata['className']]]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
+
+        scaler = StandardScaler().fit(X_train)
+        X_train_scaled = scaler.transform(X_train)
+        scaler = StandardScaler().fit(X_test)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Train
+        regressor = LogisticRegression(solver='lbfgs', max_iter=100)   
+        regressor.fit(X_train_scaled, y_train.values.ravel())
+
+        print('\nLogisticRegression model:\ny = ', regressor.coef_[0], "x + ", regressor.intercept_)
+
+        y_predict = regressor.predict(X_test_scaled)
+
+        print("\nLogisticRegression accuracity: %.3f" % accuracy_score(y_test, y_predict))
+
+        # Save model in an ouput image
+
+        col0 = X_train_scaled[:,0] if metadata['columns'] == None else X_train_scaled[:, data.columns.get_loc(metadata['columns'][0])]
+        col1 = X_train_scaled[:,1] if metadata['columns'] == None else X_train_scaled[:, data.columns.get_loc(metadata['columns'][1])]
+
+        ax = sns.regplot(x = col0, y = col1, ci = None, line_kws = {'color':'red'}, logistic = True)
+        ax.set_title(metadata['title'])
+        ax.set_xlabel(metadata['xlabel'])
+        ax.set_ylabel(metadata['ylabel'])
+
+        plt = ax.get_figure()
+        plt.savefig("output/" + metadata['output'] + "_logisticRegression")
+
+        print('\nPlot variables are: ', metadata['columns'])
+        print('\nOutput: ', "output/" + metadata['output'] + "_logisticRegression")
+
+
+class KMeans_(Learning):
     def learn(self, data, metadata : dict) -> None:
         print("Clustering")
 
@@ -251,6 +303,109 @@ class Clustering(Learning):
         plt.savefig("output/" + metadata['output'] + "_kmeans")
 
         print('\nOutput: ', "output/" + metadata['output'] + "_kmeans")
+
+
+class KNeighbors_(Learning):
+    def learn(self, data, metadata : dict) -> None:
+        print("KNeighbors")
+
+        # Split the dataset in Train-Test
+        X = data.drop(metadata['className'], axis = 1)
+
+        X = X[[ metadata['columns'][0], metadata['columns'][1] ]]
+        y = data[[metadata['className']]]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
+
+        knn = KNeighborsClassifier()
+        knn.fit(X_train.values, y_train.values.ravel())
+
+        # Test
+        y_pred = knn.predict(X_test.values)
+        print("\nNeighbors accuracity: %.3f" % metrics.accuracy_score(y_test, y_pred))
+
+
+        x_min, x_max =  X[metadata['columns'][0]].min() - .5,  X[metadata['columns'][0]].max() + .5
+        y_min, y_max =  X[metadata['columns'][1]].min() - .5,  X[metadata['columns'][1]].max() + .5
+        h = .02 # step size in the mesh
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+        Z = knn.predict(np.c_[xx.ravel(), yy.ravel()])
+        
+        # Put the result into a color plot
+        fig = plt.figure()
+        Z = Z.reshape(xx.shape)
+        plt.figure(1, figsize=(4, 3))
+        plt.set_cmap(plt.cm.Paired)
+        plt.pcolormesh(xx, yy, Z, shading='auto')
+
+        # Plot also the training points
+        plt.scatter(X[metadata['columns'][0]], X[metadata['columns'][1]], c = y.values, cmap='viridis')
+        plt.xlabel(metadata['xlabel'])
+        plt.ylabel(metadata['ylabel'])
+        plt.title(metadata['title'])
+
+        plt.xlim(xx.min(), xx.max())
+        plt.ylim(yy.min(), yy.max())
+
+        # Save model in an ouput image
+        plt.savefig("output/" + metadata['output'] + "_knn")
+
+        print('\nOutput: ', "output/" + metadata['output'] + "_knn")
+
+
+class Pipeline_(Learning):
+    def learn(self, data, metadata : dict) -> None:
+        print("Pipeline")
+
+        # Split the dataset in Train-Test
+
+        X = data.drop(metadata['className'], axis = 1)
+        y = data[[metadata['className']]]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
+
+        # Construct some pipelines
+        pipe_dt = Pipeline([('scl', StandardScaler()),
+			                ('pca', PCA(n_components=2)),
+			                ('clf', tree.DecisionTreeClassifier(random_state=42))])
+
+        pipe_svm = Pipeline([('scl', StandardScaler()),
+                    ('pca', PCA(n_components=2)),
+                    ('clf', svm.SVC(random_state=42))])
+
+        pipe_lr = Pipeline([('scl', StandardScaler()),
+			('pca', PCA(n_components=2)),
+			('clf', LogisticRegression(random_state=42))])
+
+        pipe_nb = Pipeline([('binarizer', Binarizer()),
+			('clf', MultinomialNB())])
+
+
+        # List of pipelines for ease of iteration
+        pipelines = [ pipe_dt, pipe_svm, pipe_lr, pipe_nb ]
+
+        # Dictionary of pipelines and classifier types for ease of reference
+        pipe_dict = { 0: "DecisionTree", 1: "SVC", 2: "LogisticRegression", 3: "NaiveBayes" }
+
+        # Fit the pipelines
+        for pipe in pipelines:
+            pipe.fit(X_train, y_train.values.ravel())
+
+
+        print("\n")
+        # Compare accuracies
+        for idx, val in enumerate(pipelines):
+            print('%s pipeline test accuracy: %.3f' % (pipe_dict[idx], val.score(X_test, y_test)))
+
+        # Identify the most accurate model on test data
+        best_acc = 0.0
+        best_clf = 0
+        best_pipe = ''
+        for idx, val in enumerate(pipelines):
+            if val.score(X_test, y_test) > best_acc:
+                best_acc = val.score(X_test, y_test)
+                best_pipe = val
+                best_clf = idx
+
+        print('\nClassifier with best accuracy: %s' % pipe_dict[best_clf])
 
 
 
@@ -282,9 +437,12 @@ methods = {
 }
 
 mlAlgorithms = {
-    "classification" : Classification(),
-    "regression" : Regression(),
-    "clustering" : Clustering(),
+    "DecisionTree" : DecisionTree_(),
+    "LinearRegression" : LinearRegression_(),
+    "LogisticRegression" : LogisticRegression_(),
+    "KMeans" : KMeans_(),
+    "KNeighbors" : KNeighbors_(),
+    "Pipeline" : Pipeline_()
 }
 
 
@@ -300,9 +458,12 @@ Options:
     -c,--columns=<col1,...,colN>  List with the dataset columns to representate
     --xlabel=<label>              Label for X axis
     --ylabel=<label>              Label for Y axis
-    --ml=<classification|
-          regression|
-          clustering>             Machine learning algorithm
+    --ml=<DecisionTree|
+          LinearRegression|
+          LogisticRegression|
+          Pipeline|
+          KNeighbors|
+          KMeans>                 Machine learning algorithm
     --nclusters=<number>          Number of clusters to be generated
     """
 
@@ -362,13 +523,16 @@ if __name__ == "__main__":
             # Read file and create dataframe
             df = pd.read_csv(inDataset)
 
+            print(xlabel)
+
             mlMetadata = {
                 "className": className,
                 "xlabel": xlabel,
                 "ylabel": ylabel,
                 "title": title,
                 "output": output,
-                "nclusters": nclusters
+                "nclusters": nclusters,
+                "columns": columns
             }
 
             # Create context
@@ -382,7 +546,7 @@ if __name__ == "__main__":
 
 
         except AttributeError:
-            print("Algoritmo de machine learning no válido: utilizar classification, regression o clustering")
+            print("Algoritmo de machine learning no válido: utilizar DecisionTree, LinearRegression, LogisticRegression, KMeans, KNeighbors o Pipeline")
 
 
     if (chart != None and ml == None):
