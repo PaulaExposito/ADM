@@ -30,6 +30,10 @@ from sklearn.neighbors import KNeighborsClassifier
 # warnings.filterwarnings('ignore')
 
 
+# OUTPUT_URL = "../frontend/public/output/"
+OUTPUT_URL = "output/majorcities/"
+
+
 class Representation(ABC):
     """
     The interface declares common methods to all the concrete representations 
@@ -48,14 +52,18 @@ class LineChart(Representation):
     def makeChart(self, xaxis = [], yaxis = [], metadata = {}) -> None:
         fig = plt.figure()
 
-        for i in range(len(yaxis)):
+        print("Line Chart")
+
+        for i in range(0, len(yaxis)):
             plt.plot(xaxis, yaxis[i], label=metadata['ylabel'][i])
         
         plt.title(metadata['title'])
         plt.xlabel(metadata['xlabel'])
         plt.legend()
         fig.autofmt_xdate()
-        plt.savefig("output/" + metadata['output'] + "_linechart")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_linechart")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_linechart")
+
 
 
 class BarChart(Representation):
@@ -69,7 +77,9 @@ class BarChart(Representation):
         plt.xlabel(metadata['xlabel'])
         plt.legend()
         fig.autofmt_xdate()
-        plt.savefig("output/" + metadata['output'] + "_barchart")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_barchart")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_barchart")
+
 
 
 class Histogram(Representation):
@@ -79,7 +89,9 @@ class Histogram(Representation):
         plt.title(metadata['title'])
         plt.xlabel(metadata['xlabel'])
         plt.ylabel(metadata['ylabel'][0])
-        plt.savefig("output/" + metadata['output'] + "_histogram")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_histogram")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_histogram")
+
 
 
 class Scatter(Representation):
@@ -94,7 +106,9 @@ class Scatter(Representation):
         plt.title(metadata['title'])
         plt.xlabel(metadata['xlabel'])
         plt.ylabel(metadata['ylabel'][0])
-        plt.savefig("output/" + metadata['output'] + "_scatter")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_scatter")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_scatter")
+
 
 
 class GeoPlot(Representation):
@@ -110,7 +124,9 @@ class GeoPlot(Representation):
         # m.scatter(x, y, 10)
 
         # plt.title(metadata['title'])
-        # plt.savefig("output/" + metadata['output'] + "_geoplot")
+        # plt.savefig(OUTPUT_URL + metadata['output'] + "_geoplot")
+        # print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_geoplot")
+
 
 
         # GeoPandas
@@ -123,19 +139,23 @@ class GeoPlot(Representation):
 
         gdf.plot(x="Longitude", y="Latitude", kind="scatter", ax = ax)
 
-        plt.savefig("output/" + metadata['output'] + "_geoplot")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_geoplot")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_geoplot")
+
 
 
 
 
 class ViolinPlot(Representation):
     def makeChart(self, xaxis = [], yaxis = [], metadata = {}) -> None:
-        ax = sns.violinplot(x=xaxis, y=yaxis)
+        ax = sns.violinplot(x=xaxis, y=yaxis[0])
         plt = ax.get_figure()
-        # plt.title(metadata['title'])
-        # plt.xlabel(metadata['xlabel'])
-        # plt.ylabel(metadata['ylabel'][0])
-        plt.savefig("output/" + metadata['output'] + "_violinplot")
+        ax.set_title(metadata['title'])
+        ax.set_xlabel(metadata['xlabel'])
+        ax.set_ylabel(metadata['ylabel'][0])
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_violinplot")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_violinplot")
+
 
 
 class ContextRepresentation():
@@ -204,8 +224,8 @@ class DecisionTree_(Learning):
                        class_names = data[metadata['className']].unique(),
                        filled = True)
 
-        fig.savefig("output/" + metadata['output'] + "_decisiontree")
-        print('\nOutput: ', "output/" + metadata['output'] + "_decisiontree")
+        fig.savefig(OUTPUT_URL + metadata['output'] + "_decisiontree")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_decisiontree")
 
 
 
@@ -234,9 +254,12 @@ class LinearRegression_(Learning):
 
         ax = sns.regplot(x = X_train[:,0], y = y_train, ci = None, line_kws = {'color':'red'})
         plt = ax.get_figure()
-        plt.savefig("output/" + metadata['output'] + "_linearRegression")
+        ax.set_title(metadata['title'])
+        ax.set_xlabel(metadata['xlabel'])
+        ax.set_ylabel(metadata['ylabel'])
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_linearRegression")
 
-        print('\nOutput: ', "output/" + metadata['output'] + "_linearRegression")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_linearRegression")
 
 
 class LogisticRegression_(Learning):
@@ -274,10 +297,10 @@ class LogisticRegression_(Learning):
         ax.set_ylabel(metadata['ylabel'])
 
         plt = ax.get_figure()
-        plt.savefig("output/" + metadata['output'] + "_logisticRegression")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_logisticRegression")
 
         print('\nPlot variables are: ', metadata['columns'])
-        print('\nOutput: ', "output/" + metadata['output'] + "_logisticRegression")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_logisticRegression")
 
 
 class KMeans_(Learning):
@@ -299,10 +322,15 @@ class KMeans_(Learning):
         # Save model in an ouput image
 
         fig = plt.figure()
-        plt.scatter(data.iloc[:, 0], y = data.iloc[:, 1], c=data['__gen_cluster_label'], cmap='viridis')
-        plt.savefig("output/" + metadata['output'] + "_kmeans")
 
-        print('\nOutput: ', "output/" + metadata['output'] + "_kmeans")
+        plt.scatter(data.iloc[:, 0], y = data.iloc[:, 1], c=data['__gen_cluster_label'], cmap='viridis')
+        plt.title(metadata['title'])
+        plt.xlabel(metadata['xlabel'])
+        plt.ylabel(metadata['ylabel'])
+
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_kmeans")
+
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_kmeans")
 
 
 class KNeighbors_(Learning):
@@ -347,9 +375,9 @@ class KNeighbors_(Learning):
         plt.ylim(yy.min(), yy.max())
 
         # Save model in an ouput image
-        plt.savefig("output/" + metadata['output'] + "_knn")
+        plt.savefig(OUTPUT_URL + metadata['output'] + "_knn")
 
-        print('\nOutput: ', "output/" + metadata['output'] + "_knn")
+        print('\nOutput: ', OUTPUT_URL + metadata['output'] + "_knn")
 
 
 class Pipeline_(Learning):
@@ -565,7 +593,12 @@ if __name__ == "__main__":
         }
         context.metadata = metadata
 
+        columnsList = []
+        for i in range(1, len(columns)):
+            columnsList.append(df[columns[i]].tolist())
+    
+
         # Create chart
-        context.makeChart(df[columns[0]].tolist(), df[columns[1]].tolist())
+        context.makeChart(df[columns[0]].tolist(), columnsList)
  
     print("\nExiting...")

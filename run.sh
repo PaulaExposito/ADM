@@ -49,7 +49,7 @@ python src/service.py \
 --output=maxminTemps
 
 
-# Example for Clustering
+# Example for KMeans
 python src/service.py \
 --ml=KMeans \
 --input=data/generated/ml_kmeans.csv \

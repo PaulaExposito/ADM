@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Read the dataset
-df = pd.read_csv("data/GlobalLandTemperaturesByCountry.csv")
+df = pd.read_csv("data/archive/GlobalLandTemperaturesByMajorCity.csv")
 
 # Get first five rows
 # print(df.head())
